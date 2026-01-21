@@ -44,6 +44,36 @@
             font-size: 1.1em;
         }
 
+        .mode-toggle {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .mode-btn {
+            padding: 12px 24px;
+            border: 2px solid #dee2e6;
+            background: white;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+
+        .mode-btn:hover:not(.active) {
+            border-color: #667eea;
+        }
+
         .filters {
             padding: 25px 30px;
             background: #f8f9fa;
@@ -216,6 +246,83 @@
             opacity: 0.3;
         }
 
+        /* Distribution view styles */
+        .distribution-container {
+            padding: 30px;
+            display: none;
+        }
+
+        .distribution-container.active {
+            display: block;
+        }
+
+        .chart-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .chart-box {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .chart-box h3 {
+            margin-bottom: 20px;
+            color: #495057;
+            font-size: 1.2em;
+        }
+
+        .chart-canvas {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .distribution-table {
+            width: 100%;
+        }
+
+        .distribution-table th {
+            background: #667eea;
+            color: white;
+        }
+
+        .distribution-table td {
+            text-align: center;
+        }
+
+        .distribution-table td:first-child {
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        .percent-bar {
+            background: #e9ecef;
+            border-radius: 4px;
+            height: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .percent-fill {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100%;
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 8px;
+        }
+
+        .percent-text {
+            color: white;
+            font-weight: 600;
+            font-size: 0.85em;
+        }
+
         @media (max-width: 768px) {
             .filters {
                 flex-direction: column;
@@ -229,6 +336,10 @@
 
             .btn-filter {
                 width: 100%;
+            }
+
+            .chart-section {
+                grid-template-columns: 1fr;
             }
 
             .table-container {
@@ -252,75 +363,158 @@
             <p>Find the best overnight layovers for your next bid</p>
         </div>
 
-        <div class="filters">
-            <div class="filter-group">
-                <label for="baseFilter">Base</label>
-                <select id="baseFilter">
-                    <option value="ALL">ALL</option>
-                </select>
-            </div>
-
-            <div class="filter-group">
-                <label for="monthFilter">Month</label>
-                <select id="monthFilter">
-                    <option value="ALL">ALL</option>
-                </select>
-            </div>
-
-            <div class="filter-group">
-                <label for="overnightFilter">Overnight (e.g., BTV)</label>
-                <input type="text" id="overnightFilter" placeholder="Airport code">
-            </div>
-
-            <div class="filter-group">
-                <label for="topNFilter">Top N</label>
-                <input type="number" id="topNFilter" value="10" min="1" max="1000">
-            </div>
-
-            <button class="btn-filter" onclick="applyFilters()">🔍 Filter</button>
+        <div class="mode-toggle">
+            <button class="mode-btn active" onclick="switchMode('layovers')">📋 Layover List</button>
+            <button class="mode-btn" onclick="switchMode('distribution')">📊 Base Distribution</button>
         </div>
 
-        <div class="stats" id="stats" style="display: none;">
-            <div class="stats-info" id="statsInfo">Loading...</div>
-            <div class="stats-info" id="dateInfo"></div>
-        </div>
+        <!-- LAYOVER LIST MODE -->
+        <div id="layoverMode">
+            <div class="filters">
+                <div class="filter-group">
+                    <label for="baseFilter">Base</label>
+                    <select id="baseFilter">
+                        <option value="ALL">ALL</option>
+                    </select>
+                </div>
 
-        <div id="loading" class="loading">
-            Loading layover data...
-        </div>
+                <div class="filter-group">
+                    <label for="monthFilter">Month</label>
+                    <select id="monthFilter">
+                        <option value="ALL">ALL</option>
+                    </select>
+                </div>
 
-        <div id="content" style="display: none;">
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Month</th>
-                            <th>Base</th>
-                            <th>Pairing</th>
-                            <th>Trip Range</th>
-                            <th>Overnight</th>
-                            <th style="text-align: left;">Hotel</th>
-                            <th>D-END</th>
-                            <th>Next DEPL</th>
-                            <th>Report</th>
-                            <th>Layover</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody">
-                    </tbody>
-                </table>
+                <div class="filter-group">
+                    <label for="overnightFilter">Overnight (e.g., BTV)</label>
+                    <input type="text" id="overnightFilter" placeholder="Airport code">
+                </div>
+
+                <div class="filter-group">
+                    <label for="topNFilter">Top N</label>
+                    <input type="number" id="topNFilter" value="10" min="1" max="1000">
+                </div>
+
+                <button class="btn-filter" onclick="applyFilters()">🔍 Filter</button>
+            </div>
+
+            <div class="stats" id="stats" style="display: none;">
+                <div class="stats-info" id="statsInfo">Loading...</div>
+                <div class="stats-info" id="dateInfo"></div>
+            </div>
+
+            <div id="loading" class="loading">
+                Loading layover data...
+            </div>
+
+            <div id="content" style="display: none;">
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Month</th>
+                                <th>Base</th>
+                                <th>Pairing</th>
+                                <th>Trip Range</th>
+                                <th>Overnight</th>
+                                <th style="text-align: left;">Hotel</th>
+                                <th>D-END</th>
+                                <th>Next DEPL</th>
+                                <th>Report (-45)</th>
+                                <th>Layover</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <div class="empty-state-icon">🔍</div>
+                <h2>No layovers found</h2>
+                <p>Try adjusting your filters</p>
             </div>
         </div>
 
-        <div id="emptyState" class="empty-state" style="display: none;">
-            <div class="empty-state-icon">🔍</div>
-            <h2>No layovers found</h2>
-            <p>Try adjusting your filters</p>
+        <!-- DISTRIBUTION MODE -->
+        <div id="distributionMode" class="distribution-container">
+            <div class="filters">
+                <div class="filter-group">
+                    <label for="distOvernightFilter">Select Overnight Airport</label>
+                    <select id="distOvernightFilter" onchange="showDistribution()">
+                        <option value="">-- Select --</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="distMonthFilter">Month (Optional)</label>
+                    <select id="distMonthFilter" onchange="showDistribution()">
+                        <option value="ALL">ALL</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="distributionContent" style="display: none;">
+                <div class="stats">
+                    <div class="stats-info" id="distStats"></div>
+                </div>
+
+                <div class="chart-section">
+                    <div class="chart-box">
+                        <h3>📊 Base Distribution</h3>
+                        <canvas id="pieChart" class="chart-canvas"></canvas>
+                    </div>
+
+                    <div class="chart-box">
+                        <h3>📈 Breakdown by Base</h3>
+                        <table class="distribution-table">
+                            <thead>
+                                <tr>
+                                    <th>Base</th>
+                                    <th>Count</th>
+                                    <th>Percentage</th>
+                                </tr>
+                            </thead>
+                            <tbody id="distTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="distEmptyState" class="empty-state">
+                <div class="empty-state-icon">📍</div>
+                <h2>Select an overnight airport</h2>
+                <p>Choose an airport to see its base distribution</p>
+            </div>
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script>
         let allLayovers = [];
+        let pieChart = null;
+        let currentMode = 'layovers';
+
+        function switchMode(mode) {
+            currentMode = mode;
+            
+            // Update buttons
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Show/hide sections
+            if (mode === 'layovers') {
+                document.getElementById('layoverMode').style.display = 'block';
+                document.getElementById('distributionMode').classList.remove('active');
+            } else {
+                document.getElementById('layoverMode').style.display = 'none';
+                document.getElementById('distributionMode').classList.add('active');
+            }
+        }
 
         // Load data on page load
         async function loadData() {
@@ -353,11 +547,12 @@
         }
 
         function populateFilters() {
-            // Get unique bases and months
+            // Get unique bases, months, and overnight airports
             const bases = [...new Set(allLayovers.map(l => l.base))].sort();
             const months = [...new Set(allLayovers.map(l => l.month))].sort();
+            const overnights = [...new Set(allLayovers.map(l => l.overnight_airport))].sort();
 
-            // Populate base filter
+            // Populate base filter (layover mode)
             const baseFilter = document.getElementById('baseFilter');
             bases.forEach(base => {
                 const option = document.createElement('option');
@@ -366,13 +561,31 @@
                 baseFilter.appendChild(option);
             });
 
-            // Populate month filter
+            // Populate month filter (layover mode)
             const monthFilter = document.getElementById('monthFilter');
             months.forEach(month => {
                 const option = document.createElement('option');
                 option.value = month;
                 option.textContent = month;
                 monthFilter.appendChild(option);
+            });
+
+            // Populate overnight filter (distribution mode)
+            const distOvernightFilter = document.getElementById('distOvernightFilter');
+            overnights.forEach(airport => {
+                const option = document.createElement('option');
+                option.value = airport;
+                option.textContent = airport;
+                distOvernightFilter.appendChild(option);
+            });
+
+            // Populate month filter (distribution mode)
+            const distMonthFilter = document.getElementById('distMonthFilter');
+            months.forEach(month => {
+                const option = document.createElement('option');
+                option.value = month;
+                option.textContent = month;
+                distMonthFilter.appendChild(option);
             });
         }
 
@@ -452,6 +665,129 @@
                 `;
 
                 tbody.appendChild(row);
+            });
+        }
+
+        function showDistribution() {
+            const overnight = document.getElementById('distOvernightFilter').value;
+            const month = document.getElementById('distMonthFilter').value;
+
+            if (!overnight) {
+                document.getElementById('distributionContent').style.display = 'none';
+                document.getElementById('distEmptyState').style.display = 'block';
+                return;
+            }
+
+            // Filter layovers for selected overnight
+            let filtered = allLayovers.filter(l => l.overnight_airport === overnight);
+
+            if (month !== 'ALL') {
+                filtered = filtered.filter(l => l.month === month);
+            }
+
+            if (filtered.length === 0) {
+                document.getElementById('distributionContent').style.display = 'none';
+                document.getElementById('distEmptyState').style.display = 'block';
+                return;
+            }
+
+            // Count by base
+            const baseCounts = {};
+            filtered.forEach(l => {
+                baseCounts[l.base] = (baseCounts[l.base] || 0) + 1;
+            });
+
+            const total = filtered.length;
+            const bases = Object.keys(baseCounts).sort();
+            
+            // Update stats
+            document.getElementById('distStats').textContent = 
+                `${overnight}: ${total} total overnight${total !== 1 ? 's' : ''} across ${bases.length} base${bases.length !== 1 ? 's' : ''}`;
+
+            // Update table
+            const tbody = document.getElementById('distTableBody');
+            tbody.innerHTML = '';
+
+            bases.forEach(base => {
+                const count = baseCounts[base];
+                const percent = ((count / total) * 100).toFixed(1);
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${base}</td>
+                    <td>${count}</td>
+                    <td>
+                        <div class="percent-bar">
+                            <div class="percent-fill" style="width: ${percent}%">
+                                <span class="percent-text">${percent}%</span>
+                            </div>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            // Update pie chart
+            updatePieChart(bases, baseCounts, total);
+
+            document.getElementById('distributionContent').style.display = 'block';
+            document.getElementById('distEmptyState').style.display = 'none';
+        }
+
+        function updatePieChart(bases, baseCounts, total) {
+            const ctx = document.getElementById('pieChart').getContext('2d');
+
+            // Destroy existing chart
+            if (pieChart) {
+                pieChart.destroy();
+            }
+
+            const colors = [
+                '#667eea', '#764ba2', '#f093fb', '#4facfe',
+                '#43e97b', '#fa709a', '#fee140', '#30cfd0',
+                '#a8edea', '#fed6e3'
+            ];
+
+            const data = bases.map(base => baseCounts[base]);
+            const percentages = data.map(count => ((count / total) * 100).toFixed(1));
+
+            pieChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: bases.map((base, i) => `${base} (${percentages[i]}%)`),
+                    datasets: [{
+                        data: data,
+                        backgroundColor: colors.slice(0, bases.length),
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 15,
+                                font: {
+                                    size: 12,
+                                    weight: 600
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = bases[context.dataIndex];
+                                    const count = data[context.dataIndex];
+                                    const percent = percentages[context.dataIndex];
+                                    return `${label}: ${count} (${percent}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
             });
         }
 

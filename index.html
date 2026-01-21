@@ -13,7 +13,7 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0a2540 0%, #1a4d6f 50%, #0a2540 100%);
             min-height: 100vh;
             padding: 20px;
         }
@@ -28,7 +28,7 @@
         }
 
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0a2540 0%, #1a4d6f 100%);
             color: white;
             padding: 30px;
             text-align: center;
@@ -65,13 +65,13 @@
         }
 
         .mode-btn.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0a2540 0%, #1a4d6f 100%);
             color: white;
-            border-color: #667eea;
+            border-color: #0a2540;
         }
 
         .mode-btn:hover:not(.active) {
-            border-color: #667eea;
+            border-color: #0a2540;
         }
 
         .filters {
@@ -114,12 +114,12 @@
         .filter-group select:focus,
         .filter-group input:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #1a4d6f;
         }
 
         .btn-filter {
             padding: 10px 24px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0a2540 0%, #1a4d6f 100%);
             color: white;
             border: none;
             border-radius: 8px;
@@ -132,7 +132,7 @@
 
         .btn-filter:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 4px 12px rgba(10, 37, 64, 0.4);
         }
 
         .btn-filter:active {
@@ -141,8 +141,8 @@
 
         .stats {
             padding: 15px 30px;
-            background: #fff3cd;
-            border-bottom: 2px solid #ffc107;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -152,7 +152,7 @@
 
         .stats-info {
             font-weight: 600;
-            color: #856404;
+            color: #495057;
         }
 
         .loading {
@@ -174,7 +174,7 @@
         }
 
         thead {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0a2540 0%, #1a4d6f 100%);
             color: white;
             position: sticky;
             top: 0;
@@ -286,7 +286,7 @@
         }
 
         .distribution-table th {
-            background: #667eea;
+            background: #0a2540;
             color: white;
         }
 
@@ -308,7 +308,7 @@
         }
 
         .percent-fill {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0a2540 0%, #1a4d6f 100%);
             height: 100%;
             transition: width 0.3s;
             display: flex;
@@ -742,9 +742,8 @@
             }
 
             const colors = [
-                '#667eea', '#764ba2', '#f093fb', '#4facfe',
-                '#43e97b', '#fa709a', '#fee140', '#30cfd0',
-                '#a8edea', '#fed6e3'
+                '#0a2540', '#1a4d6f', '#2e5f7f', '#4a7a9e', '#6694bd',
+                '#83aedc', '#a0c8fb', '#5d8aa8', '#3a6f8f', '#1e4d66'
             ];
 
             const data = bases.map(base => baseCounts[base]);

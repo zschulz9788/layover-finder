@@ -363,6 +363,18 @@
             <p>Find the best overnight layovers for your next bid</p>
         </div>
 
+        <div class="filters" style="border-bottom: 3px solid #0a2540;">
+            <div class="filter-group">
+                <label for="datasetSelector"><strong>Select Month Data</strong></label>
+                <select id="datasetSelector" onchange="loadSelectedDataset()">
+                    <option value="">-- Select Month --</option>
+                    <option value="feb.json">February</option>
+                    <option value="march.json">March</option>
+                    <option value="april.json">April</option>
+                </select>
+            </div>
+        </div>
+
         <div class="mode-toggle">
             <button class="mode-btn active" onclick="switchMode('layovers')">Layover List</button>
             <button class="mode-btn" onclick="switchMode('distribution')">Base Distribution</button>
@@ -404,7 +416,7 @@
             </div>
 
             <div id="loading" class="loading">
-                Loading layover data...
+                Please select a month to load data...
             </div>
 
             <div id="content" style="display: none;">
@@ -495,6 +507,7 @@
         let allLayovers = [];
         let pieChart = null;
         let currentMode = 'layovers';
+        let currentDataset = '';
 
         function switchMode(mode) {
             currentMode = mode;
@@ -515,14 +528,41 @@
             }
         }
 
-        // Load data on page load
-        async function loadData() {
+        // Load selected dataset
+        async function loadSelectedDataset() {
+            const selector = document.getElementById('datasetSelector');
+            const selectedFile = selector.value;
+            
+            if (!selectedFile) {
+                return;
+            }
+
+            currentDataset = selectedFile;
+            
+            // Show loading state
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('loading').textContent = 'Loading data...';
+            document.getElementById('content').style.display = 'none';
+            document.getElementById('stats').style.display = 'none';
+            document.getElementById('emptyState').style.display = 'none';
+
+            await loadData(selectedFile);
+        }
+
+        // Load data from specified file
+        async function loadData(filename) {
             try {
-                const response = await fetch('layovers.json');
+                const response = await fetch(filename);
+                
+                if (!response.ok) {
+                    throw new Error(`File not found: ${filename}`);
+                }
+                
                 const data = await response.json();
                 allLayovers = data.layovers;
 
-                // Populate filter dropdowns
+                // Clear and repopulate filter dropdowns
+                clearFilters();
                 populateFilters();
 
                 // Show initial data
@@ -540,9 +580,26 @@
                 document.getElementById('loading').innerHTML = 
                     '<div class="empty-state"><div class="empty-state-icon">⚠️</div>' +
                     '<h2>Error loading data</h2>' +
-                    '<p>Could not load layovers.json. Make sure the file exists.</p></div>';
+                    '<p>Could not load ' + filename + '. Make sure the file exists in your repository.</p></div>';
                 console.error('Error loading data:', error);
             }
+        }
+
+        function clearFilters() {
+            // Clear base filter
+            const baseFilter = document.getElementById('baseFilter');
+            baseFilter.innerHTML = '<option value="ALL">ALL</option>';
+
+            // Clear month filter
+            const monthFilter = document.getElementById('monthFilter');
+            monthFilter.innerHTML = '<option value="ALL">ALL</option>';
+
+            // Clear distribution filters
+            const distOvernightFilter = document.getElementById('distOvernightFilter');
+            distOvernightFilter.innerHTML = '<option value="">-- Select --</option>';
+
+            const distMonthFilter = document.getElementById('distMonthFilter');
+            distMonthFilter.innerHTML = '<option value="ALL">ALL</option>';
         }
 
         function populateFilters() {
@@ -799,8 +856,7 @@
             if (e.key === 'Enter') applyFilters();
         });
 
-        // Load data when page loads
-        loadData();
+        // Don't auto-load on page load - wait for user to select month
     </script>
 </body>
 </html>

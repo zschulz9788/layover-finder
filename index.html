@@ -363,18 +363,6 @@
             <p>Find the best overnight layovers for your next bid</p>
         </div>
 
-        <div class="filters" style="border-bottom: 3px solid #0a2540;">
-            <div class="filter-group">
-                <label for="datasetSelector"><strong>Select Month Data</strong></label>
-                <select id="datasetSelector" onchange="loadSelectedDataset()">
-                    <option value="">-- Select Month --</option>
-                    <option value="feb.json">February</option>
-                    <option value="march.json">March</option>
-                    <option value="april.json">April</option>
-                </select>
-            </div>
-        </div>
-
         <div class="mode-toggle">
             <button class="mode-btn active" onclick="switchMode('layovers')">Layover List</button>
             <button class="mode-btn" onclick="switchMode('distribution')">Base Distribution</button>
@@ -392,8 +380,12 @@
 
                 <div class="filter-group">
                     <label for="monthFilter">Month</label>
-                    <select id="monthFilter">
-                        <option value="ALL">ALL</option>
+                    <select id="monthFilter" onchange="handleMonthChange()">
+                        <option value="">-- Select Month --</option>
+                        <option value="feb.json">February</option>
+                        <option value="march.json">March</option>
+                        <option value="april.json">April</option>
+                        <option value="may.json">May</option>
                     </select>
                 </div>
 
@@ -458,13 +450,6 @@
                         <option value="">-- Select --</option>
                     </select>
                 </div>
-
-                <div class="filter-group">
-                    <label for="distMonthFilter">Month (Optional)</label>
-                    <select id="distMonthFilter" onchange="showDistribution()">
-                        <option value="ALL">ALL</option>
-                    </select>
-                </div>
             </div>
 
             <div id="distributionContent" style="display: none;">
@@ -507,7 +492,15 @@
         let allLayovers = [];
         let pieChart = null;
         let currentMode = 'layovers';
-        let currentDataset = '';
+        let currentDataFile = '';
+
+        // Month mapping
+        const MONTH_FILES = {
+            'feb.json': 'February',
+            'march.json': 'March',
+            'april.json': 'April',
+            'may.json': 'May'
+        };
 
         function switchMode(mode) {
             currentMode = mode;
@@ -528,16 +521,16 @@
             }
         }
 
-        // Load selected dataset
-        async function loadSelectedDataset() {
-            const selector = document.getElementById('datasetSelector');
-            const selectedFile = selector.value;
+        // Handle month dropdown change
+        async function handleMonthChange() {
+            const monthSelector = document.getElementById('monthFilter');
+            const selectedFile = monthSelector.value;
             
             if (!selectedFile) {
                 return;
             }
 
-            currentDataset = selectedFile;
+            currentDataFile = selectedFile;
             
             // Show loading state
             document.getElementById('loading').style.display = 'block';
@@ -561,8 +554,7 @@
                 const data = await response.json();
                 allLayovers = data.layovers;
 
-                // Clear and repopulate filter dropdowns
-                clearFilters();
+                // Populate base and overnight filters
                 populateFilters();
 
                 // Show initial data
@@ -570,7 +562,7 @@
 
                 // Update stats
                 document.getElementById('dateInfo').textContent = 
-                    `Last updated: ${new Date(data.generated).toLocaleDateString()}`;
+                    `${MONTH_FILES[filename]} - Last updated: ${new Date(data.generated).toLocaleDateString()}`;
 
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('content').style.display = 'block';
@@ -585,31 +577,14 @@
             }
         }
 
-        function clearFilters() {
-            // Clear base filter
-            const baseFilter = document.getElementById('baseFilter');
-            baseFilter.innerHTML = '<option value="ALL">ALL</option>';
-
-            // Clear month filter
-            const monthFilter = document.getElementById('monthFilter');
-            monthFilter.innerHTML = '<option value="ALL">ALL</option>';
-
-            // Clear distribution filters
-            const distOvernightFilter = document.getElementById('distOvernightFilter');
-            distOvernightFilter.innerHTML = '<option value="">-- Select --</option>';
-
-            const distMonthFilter = document.getElementById('distMonthFilter');
-            distMonthFilter.innerHTML = '<option value="ALL">ALL</option>';
-        }
-
         function populateFilters() {
-            // Get unique bases, months, and overnight airports
+            // Get unique bases and overnight airports
             const bases = [...new Set(allLayovers.map(l => l.base))].sort();
-            const months = [...new Set(allLayovers.map(l => l.month))].sort();
             const overnights = [...new Set(allLayovers.map(l => l.overnight_airport))].sort();
 
             // Populate base filter (layover mode)
             const baseFilter = document.getElementById('baseFilter');
+            baseFilter.innerHTML = '<option value="ALL">ALL</option>';
             bases.forEach(base => {
                 const option = document.createElement('option');
                 option.value = base;
@@ -617,37 +592,23 @@
                 baseFilter.appendChild(option);
             });
 
-            // Populate month filter (layover mode)
-            const monthFilter = document.getElementById('monthFilter');
-            months.forEach(month => {
-                const option = document.createElement('option');
-                option.value = month;
-                option.textContent = month;
-                monthFilter.appendChild(option);
-            });
-
             // Populate overnight filter (distribution mode)
             const distOvernightFilter = document.getElementById('distOvernightFilter');
+            distOvernightFilter.innerHTML = '<option value="">-- Select --</option>';
             overnights.forEach(airport => {
                 const option = document.createElement('option');
                 option.value = airport;
                 option.textContent = airport;
                 distOvernightFilter.appendChild(option);
             });
-
-            // Populate month filter (distribution mode)
-            const distMonthFilter = document.getElementById('distMonthFilter');
-            months.forEach(month => {
-                const option = document.createElement('option');
-                option.value = month;
-                option.textContent = month;
-                distMonthFilter.appendChild(option);
-            });
         }
 
         function applyFilters() {
+            if (!allLayovers || allLayovers.length === 0) {
+                return;
+            }
+
             const base = document.getElementById('baseFilter').value;
-            const month = document.getElementById('monthFilter').value;
             const overnight = document.getElementById('overnightFilter').value.trim().toUpperCase();
             const topN = parseInt(document.getElementById('topNFilter').value) || 10;
 
@@ -656,10 +617,6 @@
 
             if (base !== 'ALL') {
                 filtered = filtered.filter(l => l.base === base);
-            }
-
-            if (month !== 'ALL') {
-                filtered = filtered.filter(l => l.month === month);
             }
 
             if (overnight) {
@@ -726,9 +683,8 @@
 
         function showDistribution() {
             const overnight = document.getElementById('distOvernightFilter').value;
-            const month = document.getElementById('distMonthFilter').value;
 
-            if (!overnight) {
+            if (!overnight || !allLayovers || allLayovers.length === 0) {
                 document.getElementById('distributionContent').style.display = 'none';
                 document.getElementById('distEmptyState').style.display = 'block';
                 return;
@@ -736,10 +692,6 @@
 
             // Filter layovers for selected overnight
             let filtered = allLayovers.filter(l => l.overnight_airport === overnight);
-
-            if (month !== 'ALL') {
-                filtered = filtered.filter(l => l.month === month);
-            }
 
             if (filtered.length === 0) {
                 document.getElementById('distributionContent').style.display = 'none';
